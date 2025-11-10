@@ -1,0 +1,44 @@
+.welcome-bg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 4rem 1rem;
+}
+
+.welcome-card {
+  background: #ffffffEE;
+  backdrop-filter: blur(6px);
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  max-width: 680px;
+  width: 100%;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+.welcome-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #191414;
+}
+
+.welcome-desc {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #333;
+  margin-bottom: 1.75rem;
+}
+
+@media (max-width: 480px) {
+  .welcome-card {
+    padding: 2rem 1.25rem;
+  }
+  .welcome-title {
+    font-size: 1.65rem;
+  }
+  .welcome-logo {
+    width: 120px;
+  }
+}
