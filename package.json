@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "update-deps": "npx npm-check -u",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "jest",
@@ -15,6 +16,7 @@
   },
   "dependencies": {
     "d3": "^7.9.0",
+    "devmoji": "^2.3.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.5"
@@ -30,12 +32,12 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
-    "@types/react": "^19.1.16",
+    "@types/react": "^19.2.3",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.4",
     "dotenv": "^17.2.3",
     "eslint": "^9.39.1",
-    "eslint-plugin-jest": "^29.0.1",
+    "eslint-plugin-jest": "^29.1.0",
     "eslint-plugin-jest-dom": "^5.3.0",
     "eslint-plugin-jsx-a11y": "^6.9.0",
     "eslint-plugin-react": "^7.37.2",
@@ -50,6 +52,6 @@
     "jest-fixed-jsdom": "^0.0.10",
     "jest-sonar-reporter": "^2.0.0",
     "jest-transform-css": "^6.0.3",
-    "vite": "^7.2.1"
+    "vite": "^7.2.2"
   }
 }
