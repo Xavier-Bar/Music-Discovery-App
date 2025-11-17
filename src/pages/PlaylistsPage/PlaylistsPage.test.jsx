@@ -158,4 +158,26 @@ describe('PlaylistsPage', () => {
         const list = screen.getByRole('list');
         expect(list).toHaveClass('playlists-list');
     });
+    
+    // Nouveau test : vérifier que le compteur affiche la valeur renvoyée par l'API (ex : 3) et non la constante `limit`
+    test('displays playlists total coming from API (e.g. 3) instead of limit', async () => {
+        // Override mock to return total = 3
+        jest.spyOn(spotifyApi, 'fetchUserPlaylists').mockResolvedValue({
+            data: { items: playlistsData.items, total: 3 },
+            error: null
+        });
+
+        // Render page
+        renderPlaylistsPage();
+
+        // wait for loading to finish
+        await waitForLoadingToFinish();
+
+        // Expect the heading to show "3 Playlists"
+        const countHeading = await screen.findByRole('heading', { level: 2, name: '3 Playlists' });
+        expect(countHeading).toBeInTheDocument();
+
+        // Sanity: ensure it's not showing the limit (e.g. 10) instead
+        expect(countHeading).not.toHaveTextContent(`${limit} Playlists`);
+    });
 });
