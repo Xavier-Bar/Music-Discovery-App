@@ -82,7 +82,7 @@ describe('PlaylistsPage', () => {
         expect(heading).toBeInTheDocument();
 
         // should render heading of level 2 showing total playlist count
-        const countHeading = await screen.findByRole('heading', { level: 2, name: `${limit} Playlists` });
+        const countHeading = await screen.findByRole('heading', { level: 2, name: `${playlistsData.total} Playlists` });
         expect(countHeading).toBeInTheDocument();
 
         // verify each playlist item rendered, don't check details here as covered in PlaylistItem tests
@@ -150,20 +150,24 @@ describe('PlaylistsPage', () => {
         const heading1 = screen.getByRole('heading', { level: 1, name: `Your Playlists` });
         expect(heading1).toHaveClass('playlists-title', 'page-title');
 
-        // should have heading level 2 with appropriate class name
-        const heading2 = screen.getByRole('heading', { level: 2, name: `${limit} Playlists` });
+    // should have heading level 2 with appropriate class name
+    const heading2 = screen.getByRole('heading', { level: 2, name: `${playlistsData.total} Playlists` });
         expect(heading2).toHaveClass('playlists-count');
 
         // should have ordered list with appropriate class name
         const list = screen.getByRole('list');
         expect(list).toHaveClass('playlists-list');
     });
-    
-    // Nouveau test : vérifier que le compteur affiche la valeur renvoyée par l'API (ex : 3) et non la constante `limit`
-    test('displays playlists total coming from API (e.g. 3) instead of limit', async () => {
-        // Override mock to return total = 3
+
+    // Nouveau test : vérifier que le compteur affiche la valeur renvoyée par l'API (ex : 3) et non la constante limit
+    test('displays playlists total coming from API instead of limit', async () => {
+        // Override mock to return total = 3 and three items
+        const items = [
+            ...playlistsData.items,
+            { id: 'playlist3', name: 'My Playlist 3', images: [{ url: 'https://via.placeholder.com/56' }], owner: { display_name: 'User3' }, tracks: { total: 2 }, external_urls: { spotify: 'https://open.spotify.com/playlist/playlist3' } }
+        ];
         jest.spyOn(spotifyApi, 'fetchUserPlaylists').mockResolvedValue({
-            data: { items: playlistsData.items, total: 3 },
+            data: { items, total: 3 },
             error: null
         });
 
