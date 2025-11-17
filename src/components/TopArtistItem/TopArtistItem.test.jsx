@@ -12,7 +12,7 @@ describe('TopArtistItem component', () => {
             name: 'Test Artist',
             images: [{ url: 'test.jpg' }, { url: 'test-medium.jpg' }, { url: 'test-small.jpg' }],
             genres: ['pop', 'rock'],
-            followers: { total: 1000 },
+            followers: { total: 100 },
             popularity: 85,
             external_urls: { spotify: 'https://open.spotify.com/artist/artist1' }
         };
@@ -70,5 +70,22 @@ describe('TopArtistItem component', () => {
 
         // uncomment to debug
         //screen.debug();
+    });
+
+    test('affiche l\'index en commençant à 1 (index 0 → 1)', () => {
+        const artist = {
+            id: 'artist1',
+            name: 'Test Artist',
+            images: [{ url: 'test.jpg' }, { url: 'test-medium.jpg' }],
+            genres: ['pop'],
+            followers: { total: 100 },
+            popularity: 50,
+            external_urls: { spotify: 'https://open.spotify.com/artist/artist1' }
+        };
+        render(<TopArtistItem artist={artist} index={0} />);
+
+        //vérifie que l'index est affiché en commençant à 1
+        const listItem = screen.getByTestId(`top-artist-item-${artist.id}`);
+        expect(listItem).toHaveTextContent('1. Test Artist'); // <-- vérifie que 0 est affiché comme 1
     });
 });
