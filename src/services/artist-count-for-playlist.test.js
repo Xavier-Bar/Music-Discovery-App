@@ -62,4 +62,42 @@ describe("artistCountForPlaylist", () => {
 
     consoleSpy.mockRestore();
   });
+
+  test("returns undefined and logs error when fetchPlaylistById returns error field", async () => {
+    const apiError = 'API rate limit';
+    fetchPlaylistById.mockResolvedValue({ data: null, error: apiError });
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    const result = await artistCountForPlaylist('t', 'p');
+    expect(result).toBeUndefined();
+    expect(consoleSpy).toHaveBeenCalledTimes(1);
+    const callArgs = consoleSpy.mock.calls[0];
+    expect(callArgs[0]).toMatch(/Error fetching playlist/);
+    expect(callArgs[1]).toBe(apiError);
+
+    consoleSpy.mockRestore();
+  });
+
+  test("returns empty object when playlist has no tracks.items", async () => {
+    fetchPlaylistById.mockResolvedValue({ data: { some: 'value' }, error: null });
+
+    const result = await artistCountForPlaylist('t', 'p');
+    expect(result).toEqual({});
+  });
+
+  test("counts artists, skips missing track items and falls back to artist.id when name missing", async () => {
+    const data = {
+      tracks: {
+        items: [
+          { track: { name: 'Song A', artists: [{ id: 'artist-id-1' }] } },
+          { not_track: true },
+          { track: { name: 'Song B', artists: [{ name: 'Artist Name' }, { id: 'artist-id-2' }] } },
+        ],
+      },
+    };
+    fetchPlaylistById.mockResolvedValue({ data, error: null });
+
+    const result = await artistCountForPlaylist('t', 'p');
+    expect(result).toEqual({ 'artist-id-1': 1, 'Artist Name': 1, 'artist-id-2': 1 });
+  });
 });
