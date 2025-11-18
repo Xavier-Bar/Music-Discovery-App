@@ -12,7 +12,7 @@ describe('TopArtistItem component', () => {
             name: 'Test Artist',
             images: [{ url: 'test.jpg' }, { url: 'test-medium.jpg' }, { url: 'test-small.jpg' }],
             genres: ['pop', 'rock'],
-            followers: { total: 1000 },
+            followers: { total: 100 },
             popularity: 85,
             external_urls: { spotify: 'https://open.spotify.com/artist/artist1' }
         };
