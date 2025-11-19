@@ -24,6 +24,9 @@ export default function PlaylistsPage() {
   // state for playlists data
   const [playlists, setPlaylists] = useState([]);
 
+  // <-- NEW: state to hold total returned by the API -->
+  const [total, setTotal] = useState(null);
+
   // state for loading and error
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -44,8 +47,11 @@ export default function PlaylistsPage() {
           if (!handleTokenError(res.error, navigate)) {
             setError(res.error);
           }
+        } else {
+          // store items and total from API response
+          setPlaylists(res.data.items || []);
+          setTotal(res.data.total);
         }
-        setPlaylists(res.data.items);
       })
       .catch(err => { setError(err.message); })
       .finally(() => { setLoading(false); });
@@ -54,7 +60,10 @@ export default function PlaylistsPage() {
   return (
     <section className="playlists-container page-container" aria-labelledby="playlists-title">
       <h1 id="playlists-title" className="playlists-title page-title">Your Playlists</h1>
-      <h2 className="playlists-count">{limit} Playlists</h2>
+      {/* Show "shownCount of total Playlists", fallback total -> limit */}
+      <h2 className="playlists-count">
+        {`${playlists.length} of ${total ?? limit} Playlists`}
+      </h2>
       {loading && <output className="playlists-loading" data-testid="loading-indicator">Loading playlists…</output>}
       {error && !loading && <div className="playlists-error" role="alert">{error}</div>}
       {!loading && !error && (

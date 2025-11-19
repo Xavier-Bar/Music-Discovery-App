@@ -52,10 +52,10 @@ describe('PlaylistsPage', () => {
         );
     };
 
-    // Helper to wait for loading to finish
+    // Helper to wait for loading to finish (check testid used by the component)
     const waitForLoadingToFinish = async () => {
-        // initial loading state expectations
-        expect(screen.getByRole('status')).toHaveTextContent(/loading playlists/i);
+        // initial loading state expectations (component renders an element with data-testid="loading-indicator")
+        expect(screen.getByTestId('loading-indicator')).toHaveTextContent(/loading playlists/i);
         await waitFor(() => {
             expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument();
         });
@@ -81,8 +81,8 @@ describe('PlaylistsPage', () => {
         const heading = await screen.findByRole('heading', { level: 1, name: 'Your Playlists' });
         expect(heading).toBeInTheDocument();
 
-        // should render heading of level 2 showing total playlist count
-        const countHeading = await screen.findByRole('heading', { level: 2, name: `${limit} Playlists` });
+    // should render heading of level 2 showing shown count and total (e.g. "2 of 2 Playlists")
+    const countHeading = await screen.findByRole('heading', { level: 2, name: `${playlistsData.items.length} of ${playlistsData.total} Playlists` });
         expect(countHeading).toBeInTheDocument();
 
         // verify each playlist item rendered, don't check details here as covered in PlaylistItem tests
@@ -150,12 +150,38 @@ describe('PlaylistsPage', () => {
         const heading1 = screen.getByRole('heading', { level: 1, name: `Your Playlists` });
         expect(heading1).toHaveClass('playlists-title', 'page-title');
 
-        // should have heading level 2 with appropriate class name
-        const heading2 = screen.getByRole('heading', { level: 2, name: `${limit} Playlists` });
+    // should have heading level 2 with appropriate class name
+    const heading2 = screen.getByRole('heading', { level: 2, name: `${playlistsData.items.length} of ${playlistsData.total} Playlists` });
         expect(heading2).toHaveClass('playlists-count');
 
         // should have ordered list with appropriate class name
         const list = screen.getByRole('list');
         expect(list).toHaveClass('playlists-list');
+    });
+
+    // Nouveau test : vérifier que le compteur affiche la valeur renvoyée par l'API (ex : 3) et non la constante limit
+    test('displays playlists total coming from API instead of limit', async () => {
+        // Override mock to return total = 3 and three items
+        const items = [
+            ...playlistsData.items,
+            { id: 'playlist3', name: 'My Playlist 3', images: [{ url: 'https://via.placeholder.com/56' }], owner: { display_name: 'User3' }, tracks: { total: 2 }, external_urls: { spotify: 'https://open.spotify.com/playlist/playlist3' } }
+        ];
+        jest.spyOn(spotifyApi, 'fetchUserPlaylists').mockResolvedValue({
+            data: { items, total: 3 },
+            error: null
+        });
+
+        // Render page
+        renderPlaylistsPage();
+
+        // wait for loading to finish
+        await waitForLoadingToFinish();
+
+    // Expect the heading to show "3 of 3 Playlists"
+    const countHeading = await screen.findByRole('heading', { level: 2, name: '3 of 3 Playlists' });
+        expect(countHeading).toBeInTheDocument();
+
+    // Sanity: ensure it's not showing the limit (e.g. "10 Playlists") instead of the actual total
+    expect(countHeading).not.toHaveTextContent(`${limit} Playlists`);
     });
 });
