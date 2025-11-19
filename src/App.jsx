@@ -3,6 +3,7 @@ import WelcomePage from './pages/WelcomePage/WelcomePage.jsx';
 import TopTracksPage from './pages/TopTracksPage/TopTracksPage.jsx';
 import TopArtistsPage from './pages/TopArtistsPage/TopArtistsPage.jsx';
 import PlaylistsPage from './pages/PlaylistsPage/PlaylistsPage.jsx';
+import PlaylistDetailPage from './pages/PlaylistDetailPage/PlaylistDetailPage.jsx';
 import Callback from './pages/Callback.jsx';
 import Layout from './components/Layout/Layout.jsx';
 import LoginPage from './pages/LoginPage/LoginPage.jsx';
@@ -21,6 +22,7 @@ const router = createBrowserRouter([
       { path: 'top-tracks', element: <TopTracksPage /> },
       { path: 'top-artists', element: <TopArtistsPage /> },
       { path: 'playlists', element: <PlaylistsPage /> },
+      { path: 'playlist/:id', element: <PlaylistDetailPage /> },
       { path: '*', element: <NotFoundPage /> }
     ]
   }
