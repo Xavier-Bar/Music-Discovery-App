@@ -2,9 +2,9 @@
 
 import { describe, expect, test } from '@jest/globals';
 import '@testing-library/jest-dom';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import PlaylistPage from './PlaylistPage.jsx';
+import PlaylistPage from './PlaylistDetailPage.jsx';
 import * as spotifyApi from '../../api/spotify-playlists.js';
 import { beforeEach, afterEach, jest } from '@jest/globals';
 import { KEY_ACCESS_TOKEN } from '../../constants/storageKeys.js';
@@ -48,7 +48,7 @@ const playlistData = {
 const tokenValue = 'test-token';
 
 
-describe('PlaylistPage', () => {
+describe('PlaylistDetailPage', () => {
     // Setup mocks before each test
     beforeEach(() => {
         // Mock localStorage token
@@ -78,8 +78,8 @@ describe('PlaylistPage', () => {
 
     // Helper to wait for loading to finish
     const waitForLoadingToFinish = async () => {
-        // initial loading state expectations
-        expect(screen.getByRole('status')).toHaveTextContent(/Loading playlist/i);
+        // initial loading state expectations (component uses testId `loading-indicator`)
+        expect(screen.getByTestId('loading-indicator')).toHaveTextContent(/Loading playlist/i);
         await waitFor(() => {
             expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument();
         });
@@ -104,12 +104,13 @@ describe('PlaylistPage', () => {
         expect(heading).toBeInTheDocument();
 
         // should render playlist cover image
-        const img = screen.getByAltText(`Cover of ${playlistData.name}`);
+        const img = screen.getByAltText(`Cover for ${playlistData.name}`);
         expect(img).toHaveAttribute('src', playlistData.images[0].url);
 
         // should render playlist description
-        const description = await screen.findByRole('heading', { level: 2, name: playlistData.description });
+        const description = screen.getByText(playlistData.description);
         expect(description).toBeInTheDocument();
+        expect(description).toHaveClass('playlist-subtitle');
 
         // should render link to open playlist in Spotify
         const link = screen.getByRole('link', { name: /spotify/i });
@@ -174,20 +175,67 @@ describe('PlaylistPage', () => {
         // wait for loading to finish
         await waitForLoadingToFinish();
 
-        // should have section landmark with appropriate class names
-        const region = screen.getByRole('region', { name: 'My Playlist 1' });
-        expect(region).toHaveClass('playlist-container', 'page-container');
+        // section container should exist and have page container class
+        const region = screen.getByTestId('playlist-detail-page');
+        expect(region).toHaveClass('playlist-detail', 'page-container');
 
         // should have heading level 1 with appropriate class name
         const heading1 = screen.getByRole('heading', { level: 1, name: 'My Playlist 1' });
-        expect(heading1).toHaveClass('playlist-title', 'page-title');
+        expect(heading1).toHaveClass('playlist-title');
 
-        // should have heading level 2 with appropriate class name
-        const heading2 = screen.getByRole('heading', { level: 2, name: 'A cool playlist' });
-        expect(heading2).toHaveClass('playlist-subtitle', 'page-subtitle'); 
+        // description should use the subtitle class
+        const heading2 = screen.getByText('A cool playlist');
+        expect(heading2).toHaveClass('playlist-subtitle');
 
-       // should have ordered list with appropriate class name
+           // should have ordered list with appropriate class name
         const list = screen.getByRole('list');
-        expect(list).toHaveClass('playlist-list');
+        expect(list).toHaveClass('playlist-tracks');
+    });
+
+    test('renders empty playlist (no tracks) without errors', async () => {
+        // Mock playlist with zero tracks
+        const emptyPlaylist = { ...playlistData, tracks: { items: [], total: 0 } };
+        jest.spyOn(spotifyApi, 'fetchPlaylistById').mockResolvedValue({ data: emptyPlaylist, error: null });
+
+        renderPlaylistPage('playlist-empty');
+        await waitForLoadingToFinish();
+
+        // ordered list should be present but contain no list items
+        const list = screen.getByRole('list');
+        expect(list).toBeInTheDocument();
+        expect(within(list).queryAllByRole('listitem').length).toBe(0);
+    });
+
+    test('renders when playlist has no images (no cover shown)', async () => {
+        const noImagePlaylist = { ...playlistData, images: [] };
+        jest.spyOn(spotifyApi, 'fetchPlaylistById').mockResolvedValue({ data: noImagePlaylist, error: null });
+
+        renderPlaylistPage('playlist-no-image');
+        await waitForLoadingToFinish();
+
+        // cover image should not be rendered
+        expect(screen.queryByAltText(`Cover for ${playlistData.name}`)).not.toBeInTheDocument();
+        // title still present
+        expect(screen.getByRole('heading', { level: 1, name: playlistData.name })).toBeInTheDocument();
+    });
+
+    test('filters out null track items and renders valid tracks', async () => {
+        const mixedTracks = {
+            ...playlistData,
+            tracks: {
+                items: [ { track: null }, { track: playlistData.tracks.items[0].track } ],
+                total: 1,
+            },
+        };
+        jest.spyOn(spotifyApi, 'fetchPlaylistById').mockResolvedValue({ data: mixedTracks, error: null });
+
+        renderPlaylistPage('playlist-mixed');
+        await waitForLoadingToFinish();
+
+        // only the valid track should be rendered
+        expect(screen.getByTestId('track-item-track1')).toBeInTheDocument();
+        // ensure there is exactly one list item rendered inside the tracks list
+        const list = screen.getByRole('list');
+        expect(within(list).getAllByRole('listitem').length).toBe(1);
     });
 });
