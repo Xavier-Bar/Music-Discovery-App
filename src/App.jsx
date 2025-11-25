@@ -20,6 +20,7 @@ const router = createBrowserRouter([
       { path: 'callback', element: <Callback /> },
       { path: 'account', element: <AccountPage /> },
       { path: 'top-tracks', element: <TopTracksPage /> },
+      { path: 'dashboard', element: <DashboardPage /> },
       { path: 'top-artists', element: <TopArtistsPage /> },
       { path: 'playlists', element: <PlaylistsPage /> },
       { path: 'dashboard', element: <DashboardPage /> },
