@@ -1,32 +1,41 @@
 import { useState, useEffect } from 'react';
 import { useRequireToken } from '../../hooks/useRequireToken.js';
-import { fetchUserTopArtists } from '../../api/spotify-me.js';
+import { fetchUserTopArtists, fetchUserTopTracks } from '../../api/spotify-me.js';
+import SimpleCard from '../../components/SimpleCard/SimpleCard.jsx';
+import './DashboardPage.css';
 
 export default function DashboardPage() {
   const { token, checking } = useRequireToken();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [topArtist, setTopArtist] = useState(null);
+  const [topTrack, setTopTrack] = useState(null);
 
-  // set loading when token becomes available
+  // when token becomes available, fetch top artist and top track in parallel
   useEffect(() => {
-    if (!checking && token) setLoading(true);
-  }, [checking, token]);
-
-  useEffect(() => {
-    if (checking) return; // wait for token check to finish
-    if (!token) return; // useRequireToken will redirect to login
+    if (checking) return;
+    if (!token) return;
 
     let active = true;
-    setError(null);
-    fetchUserTopArtists(token, 1, 'short_term')
-      .then(res => {
+    // schedule loading state update to avoid synchronous setState in effect
+    Promise.resolve().then(() => {
+      if (active) setLoading(true);
+      if (active) setError(null);
+    });
+
+    const pArtists = fetchUserTopArtists(token, 1, 'short_term');
+    const pTracks = fetchUserTopTracks(token, 1, 'short_term');
+
+    Promise.all([pArtists, pTracks])
+      .then(([aRes, tRes]) => {
         if (!active) return;
-        if (res.error) {
-          setError(res.error);
+        if (aRes.error || tRes.error) {
+          setError(aRes.error || tRes.error);
           return;
         }
-        setTopArtist(res.data?.items?.[0] ?? null);
+
+        setTopArtist(aRes.data?.items?.[0] ?? null);
+        setTopTrack(tRes.data?.items?.[0] ?? null);
       })
       .catch(err => {
         if (!active) return;
@@ -47,19 +56,26 @@ export default function DashboardPage() {
       {loading && <div className="dashboard-status" role="status">Loading top artist…</div>}
       {error && !loading && <div role="alert" className="dashboard-error">{error}</div>}
 
-      {!loading && !error && topArtist && (
-        <div className="dashboard-top-artist" data-testid="top-artist">
-          <img
-            src={topArtist.images?.[0]?.url}
-            alt={topArtist.name}
-            className="top-artist-cover"
-          />
-          <div className="top-artist-info">
-            <div className="top-artist-name">{topArtist.name}</div>
-            {Array.isArray(topArtist.genres) && topArtist.genres.length > 0 && (
-              <div className="top-artist-genres">{topArtist.genres.join(', ')}</div>
-            )}
-          </div>
+      {/* cards container (artist + track) rendered below */}
+      {(!loading && !error) && (
+        <div className="dashboard-cards">
+          {topArtist && (
+            <SimpleCard
+              imageUrl={topArtist.images?.[0]?.url}
+              title={topArtist.name}
+              subtitle={Array.isArray(topArtist.genres) ? topArtist.genres.join(', ') : ''}
+              link={topArtist.external_urls?.spotify}
+            />
+          )}
+
+          {topTrack && (
+            <SimpleCard
+              imageUrl={topTrack.album?.images?.[0]?.url}
+              title={topTrack.name}
+              subtitle={topTrack.artists?.map(a => a.name).join(', ')}
+              link={topTrack.external_urls?.spotify}
+            />
+          )}
         </div>
       )}
     </section>
